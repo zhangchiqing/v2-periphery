@@ -22,3 +22,8 @@ The following assumes the use of `node@>=10`.
 ## Run Tests
 
 `yarn test`
+
+## Run the Walk Through test case
+```
+node ./node_modules/.bin/mocha -f 'WalkThrough'
+```

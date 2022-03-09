@@ -18,7 +18,7 @@ enum RouterVersion {
   UniswapV2Router02 = 'UniswapV2Router02'
 }
 
-describe('UniswapV2Router{01,02}', () => {
+describe('WalkThrough', () => {
   for (const routerVersion of Object.keys(RouterVersion)) {
     const provider = new MockProvider({
       hardfork: 'istanbul',
@@ -59,8 +59,9 @@ describe('UniswapV2Router{01,02}', () => {
 
         // lisa needs to approve uniswap to transfer her tokenA and tokenB on her behalf before calling
         // addLiquidity, otherwise addLiquidity will fail
-        await token0.connect(lisa).approve(router.address, MaxUint256)
-        await token1.connect(lisa).approve(router.address, MaxUint256)
+        // only approve the necessary amount - the amount to add to the pool
+        await token0.connect(lisa).approve(router.address, expandTo18Decimals(5))
+        await token1.connect(lisa).approve(router.address, expandTo18Decimals(20))
 
         // lisa add 5 tokenA and 20 tokenB to the pool, and receive about 10 liquidity token
         await router.connect(lisa).addLiquidity(
@@ -86,8 +87,9 @@ describe('UniswapV2Router{01,02}', () => {
         await token1.transfer(lily.address, expandTo18Decimals(200))
 
         // lily also needs to approve uniswap to transfer her tokenA and tokenB on her behalf
-        await token0.connect(lily).approve(router.address, MaxUint256)
-        await token1.connect(lily).approve(router.address, MaxUint256)
+        // only approve the necessary amount - the amount to add to the pool
+        await token0.connect(lily).approve(router.address, expandTo18Decimals(50))
+        await token1.connect(lily).approve(router.address, expandTo18Decimals(200))
 
         // lily add all her 50 tokenA and 200 tokenB to the pool
         await router.connect(lily).addLiquidity(
@@ -127,8 +129,8 @@ describe('UniswapV2Router{01,02}', () => {
 
         // before tim can swap tokens, he needs to approve uniswap to transfer tokens on
         // his behalf, otherwise "swap" call will fail
-        await token0.connect(tim).approve(router.address, MaxUint256)
-        await token1.connect(tim).approve(router.address, MaxUint256)
+        // only approve necessary amount - the amount of token 0 to swap
+        await token0.connect(tim).approve(router.address, expandTo18Decimals(10))
 
         // setup tim's account with 10 tokenA
         await token0.transfer(tim.address, expandTo18Decimals(10))
@@ -160,7 +162,8 @@ describe('UniswapV2Router{01,02}', () => {
         // lisa will call removeLiquidity with all her liquidity tokens.
         // but before removeLiquidity, lisa needs to approve uniswap to transfer her
         // liquidity on her behalf, other removeLiquidity will fail
-        await pair.connect(lisa).approve(router.address, MaxUint256)
+        // approve the amount that will be transferred to the router
+        await pair.connect(lisa).approve(router.address, expandTo18Decimals(10).sub(MINIMUM_LIQUIDITY))
 
         // lisa remove liquidity with all her liquidity tokens
         await router.connect(lisa).removeLiquidity(
@@ -188,7 +191,8 @@ describe('UniswapV2Router{01,02}', () => {
         expect(await pair.balanceOf(lily.address)).to.eq(expandTo18Decimals(100))
 
         // lily also needs to approve uniswap to transfer her liquidity token on her behalf
-        await pair.connect(lily).approve(router.address, MaxUint256)
+        // only approve the amount of liquidity token to be transferred to the router
+        await pair.connect(lily).approve(router.address, expandTo18Decimals(100))
 
         // lily remove liquidity with all her liquidity tokens
         await router.connect(lily).removeLiquidity(
@@ -210,7 +214,7 @@ describe('UniswapV2Router{01,02}', () => {
         // after all liquidity removed their liquidity, let's give a look at the contract's state
         expect(await pair.totalSupply()).to.eq(MINIMUM_LIQUIDITY) // a tiny amount of liquidity token
         expect(await token0.balanceOf(pair.address)).to.eq(591) // a tiny amount of tokenA
-        expect(await token1.balanceOf(pair.address)).to.eq(1691) // a tiny amount of tokenB
+        expect(await token1.balanceOf(pair.address)).to.eq(1694) // a tiny amount of tokenB
       })
     })
   }
